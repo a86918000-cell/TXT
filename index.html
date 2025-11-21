@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>智能記事本 | 多功能筆記系統</title>
+  <style>
+    :root {
+      --primary-color: #2196F3;
+      --soft-gray: #f5f7fa;
+      --border-color: #e0e0e0;
+      --hover-bg: #f0f4f8;
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      margin: 0;
+      padding: 24px 16px;
+      background: var(--soft-gray);
+      min-height: 100vh;
+    }
+
+    .notebook-container {
+      background: #ffffff;
+      max-width: 600px;
+      margin: 0 auto;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+    }
+
+    #tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      border-radius: 12px;
+      background: #f8f9fa;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: var(--transition);
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+
+    .tab.active {
+      background: #e3f2fd;
+      border-color: var(--primary-color);
+      font-weight: 500;
+      color: var(--primary-color);
+    }
+
+    .tab:hover {
+      background: var(--hover-bg);
+    }
+
+    .tab input {
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      width: 80px;
+      color: inherit;
+      font-weight: inherit;
+    }
+
+    .tab input:focus {
+      outline: none;
+    }
+
+    .tab .close-btn {
+      margin-left: 8px;
+      color: #bdbdbd;
+      cursor: pointer;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .tab .close-btn:hover {
+      color: #ff5252;
+    }
+
+    #addTabButton {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: #ffffff;
+      border: 1px dashed var(--border-color);
+      cursor: pointer;
+      color: #616161;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    #addTabButton:hover {
+      background: var(--hover-bg);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    #templateButtons {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    #templateButtons button {
+      padding: 16px;
+      font-size: 16px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    #templateButtons button:hover {
+      background: var(--hover-bg);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .content {
+      padding: 24px;
+      background: #f8f9fa;
+      border-radius: 12px;
+    }
+
+    .flow-step {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .flow-step input {
+      border: none;
+      border-bottom: 2px solid #eee;
+      padding: 4px 8px;
+      font-size: 15px;
+      width: 70%;
+      transition: var(--transition);
+    }
+
+    .flow-step input:focus {
+      outline: none;
+      border-bottom-color: var(--primary-color);
+    }
+
+    .flow-step button {
+      margin-left: 12px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #e3f2fd;
+      color: var(--primary-color);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .flow-step button:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .random-list {
+      display: grid;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .random-list input {
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 15px;
+      transition: var(--transition);
+    }
+
+    .random-list input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+    }
+
+    .content button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary-color);
+      color: white;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 15px;
+    }
+
+    .content button:hover {
+      background: #1976D2;
+      box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+    }
+
+    #resultInput {
+      margin: 16px 0;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 16px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<div class="notebook-container">
+  <div id="tabs"></div>
+  <div id="templateButtons">
+    <button onclick="createTab('流程圖')">📋 流程圖</button>
+    <button onclick="createTab('隨機本')">🎲 隨機本</button>
+  </div>
+  <div id="tabContents"></div>
+</div>
+
+<script>
+  let tabs = JSON.parse(localStorage.getItem('notebookTabs')) || [];
+  let currentTab = tabs.length > 0 ? 0 : -1;
+
+  const tabsContainer = document.getElementById('tabs');
+  const addTabButton = document.createElement('div');
+  addTabButton.id = 'addTabButton';
+  addTabButton.textContent = '➕ 新增頁籤';
+  const templateButtons = document.getElementById('templateButtons');
+  const tabContents = document.getElementById('tabContents');
+
+  function saveToLocalStorage() {
+    localStorage.setItem('notebookTabs', JSON.stringify(tabs));
+  }
+
+  addTabButton.onclick = () => {
+    templateButtons.style.display = templateButtons.style.display === 'grid' ? 'none' : 'grid';
+  };
+
+  function createTab(type) {
+    const id = Date.now();
+    const tabData = { 
+      id, 
+      name: type === '流程圖' ? '新流程' : '新隨機本', 
+      type, 
+      steps: type === '流程圖' ? [{ title: '步驟 1', detail: '', done: false }] : [],
+      items: type === '隨機本' ? [] : [], itemsHistory: []
+    };
+    tabs.push(tabData);
+    currentTab = tabs.length - 1;
+    renderTabs();
+    renderContent();
+    templateButtons.style.display = 'none';
+    saveToLocalStorage();
+  }
+
+  function switchTab(index) {
+    currentTab = index;
+    renderTabs();
+    renderContent();
+  }
+
+  function closeTab(index) {
+    if (tabs.length === 1) return;
+    tabs.splice(index, 1);
+    if (currentTab >= index) currentTab = Math.max(0, currentTab - 1);
+    renderTabs();
+    renderContent();
+    saveToLocalStorage();
+  }
+
+  function renderTabs() {
+    tabsContainer.innerHTML = '';
+    tabs.forEach((tab, index) => {
+      const tabEl = document.createElement('div');
+      tabEl.className = `tab${index === currentTab ? ' active' : ''}`;
+
+      const input = document.createElement('input');
+      input.value = tab.name;
+      input.onchange = e => {
+        tab.name = e.target.value;
+        renderTabs();
+        saveToLocalStorage();
+      };
+      input.onclick = e => e.stopPropagation();
+      tabEl.onclick = () => switchTab(index);
+
+      const closeBtn = document.createElement('span');
+      closeBtn.className = 'close-btn';
+      closeBtn.textContent = '✕';
+      closeBtn.onclick = e => { 
+        e.stopPropagation(); 
+        closeTab(index); 
+        saveToLocalStorage();
+      };
+
+      tabEl.appendChild(input);
+      tabEl.appendChild(closeBtn);
+      tabsContainer.appendChild(tabEl);
+    });
+    tabsContainer.appendChild(addTabButton);
+  }
+
+  function renderContent() {
+    tabContents.innerHTML = '';
+    if (currentTab === -1 || !tabs[currentTab]) return;
+
+    const tab = tabs[currentTab];
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'content';
+
+    if (tab.type === '流程圖') {
+      const flowArea = document.createElement('div');
+      tab.steps.forEach((step, i) => {
+        const stepDiv = document.createElement('div');
+        stepDiv.className = 'flow-step';
+
+        if (!step.done) {
+          const input = document.createElement('input');
+          input.value = step.title;
+          input.oninput = e => {
+            step.title = e.target.value;
+            saveToLocalStorage();
+          };
+          stepDiv.appendChild(input);
+
+          const goDetail = document.createElement('button');
+          goDetail.textContent = '完成編輯';
+          goDetail.onclick = () => {
+            step.done = true;
+            renderContent();
+            saveToLocalStorage();
+          };
+          stepDiv.appendChild(goDetail);
+        } else {
+          const h3 = document.createElement('h3');
+          h3.textContent = step.title;
+          h3.style.margin = '0 0 8px 0';
+          stepDiv.appendChild(h3);
+
+          const textarea = document.createElement('textarea');
+          textarea.value = step.detail;
+          textarea.placeholder = '輸入步驟詳細說明...';
+          textarea.style.width = '100%';
+          textarea.style.height = '80px';
+          textarea.style.padding = '8px';
+          textarea.style.border = '1px solid #eee';
+          textarea.style.borderRadius = '6px';
+          textarea.oninput = e => {
+            step.detail = e.target.value;
+            saveToLocalStorage();
+          };
+          stepDiv.appendChild(textarea);
+
+          const backBtn = document.createElement('button');
+          backBtn.textContent = '編輯標題';
+          backBtn.style.background = '#f5f5f5';
+          backBtn.style.color = '#616161';
+          backBtn.onclick = () => {
+            step.done = false;
+            renderContent();
+            saveToLocalStorage();
+          };
+          stepDiv.appendChild(backBtn);
+        }
+
+        flowArea.appendChild(stepDiv);
+      });
+
+      const addStepBtn = document.createElement('button');
+           addStepBtn.textContent = '➕ 新增步驟';
+      addStepBtn.onclick = () => {
+        tab.steps.push({ title: '新步驟', detail: '', done: false });
+        renderContent();
+        saveToLocalStorage();
+      };
+      contentDiv.appendChild(flowArea);
+      contentDiv.appendChild(addStepBtn);
+    }
+
+    if (tab.type === '隨機本') {
+
+      // ➤ 抽選標題
+      const title = document.createElement('div');
+      title.textContent = '抽選結果';
+      title.style.fontSize = '16px';
+      title.style.fontWeight = '600';
+      title.style.marginBottom = '6px';
+      contentDiv.appendChild(title);
+
+      // ➤ 小提示
+      const hint = document.createElement('div');
+      hint.textContent = '這邊是抽選結果';
+      hint.style.fontSize = '13px';
+      hint.style.color = '#666';
+      hint.style.marginBottom = '4px';
+      contentDiv.appendChild(hint);
+
+      // ➤ 抽選結果顯示框
+      const result = document.createElement('input');
+      result.placeholder = '抽選結果會顯示在這裡';
+      result.id = 'resultInput';
+      result.readOnly = true;
+      contentDiv.appendChild(result);
+
+      // ➤ 歷史紀錄
+      const historyDiv = document.createElement('div');
+      historyDiv.style.marginTop = '12px';
+      historyDiv.style.padding = '12px';
+      historyDiv.style.background = '#fff';
+      historyDiv.style.border = '1px solid #ddd';
+      historyDiv.style.borderRadius = '8px';
+      historyDiv.innerHTML = '<b>抽選歷史紀錄：</b><br>';
+      contentDiv.appendChild(historyDiv);
+
+      // ⭐ 讀取已儲存紀錄
+      tab.itemsHistory = tab.itemsHistory || [];
+      tab.itemsHistory.forEach(item => {
+        const record = document.createElement('div');
+        record.textContent = `• ${item}`;
+        record.style.marginTop = '4px';
+        historyDiv.appendChild(record);
+      });
+
+      // ➤ 清除紀錄
+      const clearBtn = document.createElement('button');
+      clearBtn.textContent = '🧹 清除紀錄';
+      clearBtn.style.background = '#f44336';
+      clearBtn.style.marginTop = '8px';
+      clearBtn.onclick = () => {
+        tab.itemsHistory = [];
+        saveToLocalStorage();
+        historyDiv.innerHTML = '<b>抽選歷史紀錄：</b><br>';
+      };
+      contentDiv.appendChild(clearBtn);
+
+      // ➤ 抽選按鈕
+      const drawBtn = document.createElement('button');
+      drawBtn.textContent = '🎲 立即抽選';
+      drawBtn.style.marginTop = '12px';
+      drawBtn.onclick = () => {
+        if (tab.items.length > 0) {
+          const choice = tab.items[Math.floor(Math.random() * tab.items.length)];
+          result.value = choice;
+
+          tab.itemsHistory.push(choice);
+          saveToLocalStorage();
+
+          const record = document.createElement('div');
+          record.textContent = `• ${choice}`;
+          record.style.marginTop = '4px';
+          historyDiv.appendChild(record);
+
+        } else {
+          alert('請先添加抽選項目！');
+        }
+      };
+      contentDiv.appendChild(drawBtn);
+
+      // ➤ 隨機項目列表
+      const listDiv = document.createElement('div');
+      listDiv.className = 'random-list';
+
+      tab.items.forEach((text, i) => {
+        const input = document.createElement('input');
+        input.value = text;
+        input.placeholder = `項目 ${i + 1}`;
+        input.oninput = e => {
+          tab.items[i] = e.target.value;
+          saveToLocalStorage();
+        };
+        listDiv.appendChild(input);
+      });
+
+      const addBtn = document.createElement('button');
+      addBtn.textContent = '➕ 新增項目';
+      addBtn.onclick = () => {
+        if (tab.items.length < 12) {
+          tab.items.push('');
+          renderContent();
+          saveToLocalStorage();
+        } else {
+          alert('最多可添加12個項目！');
+        }
+      };
+      contentDiv.appendChild(listDiv);
+      contentDiv.appendChild(addBtn);
+    }
+
+    tabContents.appendChild(contentDiv);
+  }
+
+  // 初始化渲染
+  if (tabs.length > 0) {
+    renderTabs();
+    renderContent();
+  } else {
+    tabsContainer.appendChild(addTabButton);
+  }
+</script>
+</body>
+</html>
